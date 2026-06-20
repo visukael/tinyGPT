@@ -5,7 +5,6 @@ import random
 
 from transformer_blocks import Block
 
-
 print("Torch version:", torch.__version__)
 print("CUDA available:", torch.cuda.is_available())
 print("GPU name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "None")
@@ -20,7 +19,7 @@ spm.SentencePieceTrainer.Train(
     input="corpus.txt",
     model_prefix="tokenizer",
     vocab_size=200,     
-    model_type="bpe"
+    model_type="unigram"
 )
 
 sp = spm.SentencePieceProcessor()
@@ -34,8 +33,6 @@ print(data)
 vocab_size = sp.get_piece_size() 
 print(vocab_size)
 
-
-
 block_size = 6 
 embedding_dim = 32
 n_heads = 2  
@@ -43,15 +40,11 @@ n_layers = 2
 lr = 1e-3 
 epochs = 1500  
 
-
 def get_batch(batch_size=16):
     ix = torch.randint(len(data) - block_size, (batch_size,))  
     x = torch.stack([data[i:i+block_size] for i in ix])  
     y = torch.stack([data[i+1:i+block_size+1] for i in ix]) 
     return x, y
-
-
-
 
 class TinyGPT(nn.Module):
     def __init__(self):
@@ -89,8 +82,6 @@ class TinyGPT(nn.Module):
             idx = torch.cat((idx, next_idx), dim=1)
         return idx
 
-
-
 model = TinyGPT()
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
@@ -103,10 +94,6 @@ for step in range(epochs):
     if step % 300 == 0:
         print(f"Step {step}, loss={loss.item():.4f}")
 
-
-
-
-
 import sentencepiece as spm
 sp = spm.SentencePieceProcessor()
 sp.load("tokenizer.model")
@@ -116,7 +103,6 @@ context = torch.tensor([sp.encode("tata surya")], dtype=torch.long)
 out = model.generate(context, max_new_tokens=100)
 
 print("\nGenerated text:\n")
-
 
 generated_ids = out[0].tolist()
 print(sp.decode(generated_ids))
